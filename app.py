@@ -27,8 +27,8 @@ st.set_page_config(page_title="Vyuha-AI GS-1", layout="wide")
 load_dotenv()
 
 # --- CONSTANTS ---
-LOGO_PATH = "/Users/electromarine/Hackathon/ProjectAlpha/Logo/Logo-Vyuha.png"
-BANNER_PATH = "/Users/electromarine/Hackathon/ProjectAlpha/Logo/Banner-Vyuha.png"
+LOGO_PATH = "./assets/Logo-Vyuha.png"
+BANNER_PATH = "./assets/Banner-Vyuha.png"
 
 # --- HELPER: IMAGE TO BASE64 FOR BACKGROUND ---
 def get_base64_of_bin_file(bin_file):
