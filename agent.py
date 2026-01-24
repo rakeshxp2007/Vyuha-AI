@@ -29,8 +29,8 @@ def get_instruction(filename):
 def get_gs1_agent():
     # We create a new instance of the model and agent every time this is called
     #brain = Gemini(id="gemini-2.0-flash-exp")
-    brain = Gemini(id="gemini-3-flash-preview", thinking_level='high')
-    #brain= OpenAIChat(id='gpt-4o')
+    #brain = Gemini(id="gemini-3-flash-preview", thinking_level='high')
+    brain= OpenAIChat(id='gpt-4o')
     
     instructions = get_instruction('instructions_for_smegs1.md')
     
