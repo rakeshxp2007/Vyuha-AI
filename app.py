@@ -23,7 +23,7 @@ def setup_opik_telemetry():
 
 setup_opik_telemetry()
 
-st.set_page_config(page_title="Vyuha-AI", layout="wide")
+st.set_page_config(page_title="Vyuha-AI GS-1", layout="wide")
 load_dotenv()
 
 # --- CONSTANTS ---
