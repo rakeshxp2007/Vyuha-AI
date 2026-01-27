@@ -1,7 +1,9 @@
 import streamlit as st
+import re
 import base64
+import time
 from dotenv import load_dotenv
-from agent import get_gs1_agent
+from agent import get_gs1_agent, get_supervisor_team
 from opentelemetry import trace as trace_api
 from openinference.instrumentation.agno import AgnoInstrumentor
 
@@ -123,11 +125,18 @@ with st.sidebar:
     st.markdown("---")
     st.caption("System Status: Agent Active ✅")
 
-# --- MAIN UI ---
-# Banner and Caption removed as requested.
+# --- STATE MANAGEMENT ---
+if "agent" in st.session_state:
+    del st.session_state.agent 
 
-if "agent" not in st.session_state: st.session_state.agent = get_gs1_agent()
-if "messages" not in st.session_state: st.session_state.messages = []
+# 2. Load the Supervisor Team
+if "agent" not in st.session_state: 
+    st.session_state.agent = get_supervisor_team()
+    print("✅ Supervisor Team Loaded Successfully") 
+
+# 3. Initialize Chat History (Keep this!)
+if "messages" not in st.session_state: 
+    st.session_state.messages = []
 
 # Message Display
 for msg in st.session_state.messages:
@@ -137,21 +146,52 @@ for msg in st.session_state.messages:
 
 # Input Logic
 if prompt := st.chat_input("Enter your UPSC GS-1 query..."):
+    # 1. Display User Message
     st.session_state.messages.append({"role": "user", "content": prompt})
-    with st.chat_message("user"): st.markdown(prompt)
+    with st.chat_message("user"): 
+        st.markdown(prompt)
 
+    # 2. Assistant Logic
     with st.chat_message("assistant"):
         placeholder = st.empty()
         full_res = ""
+        
         with trace_api.get_tracer(__name__).start_as_current_span("Vyuha-Query") as span:
-            stream = st.session_state.agent.run(prompt, stream=True)
-            for chunk in stream:
-                if hasattr(chunk, 'content') and chunk.content:
-                    full_res += chunk.content
-                    placeholder.markdown(full_res + "▌")
+            
+            # 1. GET FINAL ANSWER (Non-Streaming)
+            with st.spinner("Supervisor is auditing the answer..."):
+                try:
+                    response = st.session_state.agent.run(prompt, stream=False)
+                    final_text = response.content
+                except Exception as e:
+                    final_text = f"Error: {str(e)}"
+
+            # 2. TYPEWRITER EFFECT (Text Only)
+            for word in final_text.split(" "):
+                full_res += word + " "
+                placeholder.markdown(full_res + "▌")
+                time.sleep(0.02) 
+            
+            # Remove cursor at the end
             placeholder.markdown(full_res)
-            w_count = len(full_res.split())
-            st.markdown(f'<p class="word-count">Words: {w_count}</p>', unsafe_allow_html=True)
+
+            # 3. RENDER IMAGE (Runs ONCE after typing is done)
+            # This prevents the app from trying to reload the image 200 times
+            image_match = re.search(r'!\[.*?\]\((.*?)\)', full_res)
+            if image_match:
+                image_url = image_match.group(1)
+                st.image(image_url, caption="Generated Diagram", use_container_width=True)
+
+            # 4. WORD COUNT LOGIC
+            clean_text = full_res.replace(prompt, "").strip()
+            clean_text = re.sub(r'[*#|_`]', '', clean_text)
+            w_count = len(clean_text.split())
+
+            if w_count > 260:
+                st.markdown(f'<p class="word-count" style="color: #ff4b4b;">Words: {w_count} (Limit Exceeded)</p>', unsafe_allow_html=True)
+            else:
+                st.markdown(f'<p class="word-count" style="color: #00c04b;">Words: {w_count} (Perfect)</p>', unsafe_allow_html=True)
+
             span.set_attribute("final_answer", full_res)
     
     st.session_state.messages.append({"role": "assistant", "content": full_res, "word_count": w_count})
