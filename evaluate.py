@@ -1,6 +1,6 @@
 import os
 import pandas as pd
-import numpy as np
+import json
 from dotenv import load_dotenv
 from opik import Opik
 from opik.evaluation import evaluate
@@ -13,69 +13,108 @@ from agent import get_gs1_agent
 # 1. LOAD ENVIRONMENT VARIABLES
 load_dotenv() 
 
-# Opik pulls OPIK_API_KEY from .env automatically. 
-# We only pass the workspace here.
+# Initialize Opik Client
 client = Opik(workspace=os.getenv("OPIK_WORKSPACE"))
 
-# 2. FIX: Dataset Type Casting & NaN Handling
+# 2. DATASET LOADER (With the "NaN" Fix)
 def get_benchmarking_dataset():
-    dataset_name = "Vyuha-Benchmark-v1"
+    dataset_name = "Vyuha-Benchmark-GS1-v2"
+    
+    # 1. DELETE EXISTING (Clean Slate)
     try:
-        return client.get_dataset(name=dataset_name)
-    except Exception:
-        dataset = client.create_dataset(name=dataset_name)
-        df = pd.read_csv("llm_as_judge_ds.csv")
-        
-        # STRICTOR TYPE CASTING:
-        # First fill NaNs with empty strings, then force everything to string type
-        df = df.fillna("").astype(str) 
-        
-        dataset_items = df.to_dict(orient="records")
-        dataset.insert(dataset_items)
-        return dataset
+        client.delete_dataset(name=dataset_name)
+        print(f"🗑️ Deleted old version of {dataset_name}")
+    except:
+        pass # It didn't exist, which is fine
 
-# 3. FIX: Handling 'NoneType' and Printing Context
+    # 2. CREATE FRESH
+    print(f"🆕 Creating fresh dataset: {dataset_name}")
+    dataset = client.create_dataset(name=dataset_name)
+    
+    # 3. READ & INSERT
+    try:
+        df = pd.read_csv("llm_as_judge_ds.csv",encoding="latin1")
+        
+        # 1. Force all column names to be strings (Fixes 'Hashable' error)
+        df.columns = df.columns.astype(str)
+        
+        # 2. Force all data to be strings (Fixes NaN/Float errors)
+        df = df.fillna("").astype(str)
+        
+        # 3. Explicitly type hint the variable (Optional, helps Pylance)
+        from typing import List, Dict, Any
+        dataset_items: List[Dict[str, Any]] = df.to_dict(orient="records")
+        
+        dataset.insert(dataset_items)
+        print(f"✅ Successfully inserted {len(dataset_items)} items from CSV.")
+        
+    except FileNotFoundError:
+        print("❌ CRITICAL ERROR: 'llm_as_judge_ds.csv' not found in this folder.")
+        raise
+        
+    return dataset
+
+# 3. THE EXAM TASK (Agent runs here)
 def evaluation_task(dataset_item):
+    # Initialize a fresh agent for each question
     agent = get_gs1_agent()
-    # Run the agent (evaluation must be non-streaming)
+    
+    # Run the Agent (Non-streaming for evaluation)
+    # We use the prompt from the CSV 'input' column
     response = agent.run(dataset_item["input"], stream=False)
     
+    # --- CONTEXT EXTRACTION ---
+    # We need to find what the agent "read" to check for Hallucinations
     retrieved_context = []
     
-    # GUARD: Using 'or []' ensures we iterate over a list even if Agno returns None
-    for msg in (response.messages or []):
-        if msg and hasattr(msg, 'role') and msg.role == "tool":
-            retrieved_context.append(str(msg.content))
-            
-    # GUARD: 'references' is common in newer Agno versions for RAG
-    if hasattr(response, 'references') and response.references:
+    # 1. Check for Tool Messages (Search Results/Knowledge Base)
+    if hasattr(response, 'messages'):
+        for msg in (response.messages or []):
+            if hasattr(msg, 'role') and msg.role == "tool":
+                # Clean up tool output to be string
+                retrieved_context.append(str(msg.content))
+                
+    # 2. Check for Direct References (if available in your Agno version)
+    if hasattr(response, 'references'):
         for ref in (response.references or []):
             retrieved_context.append(str(ref))
-
-    # DEBUG: See exactly what NCERT chunks are being picked up
-    print(f"\n--- Context for Question: {dataset_item['input'][:50]}... ---")
-    print(retrieved_context if retrieved_context else "⚠️ No NCERT chunks retrieved!")
+            
+    # Default to "No Context" if nothing found (prevents metric crash)
+    final_context = retrieved_context if retrieved_context else ["No external context used"]
 
     return {
         "input": str(dataset_item["input"]),
-        "output": str(response.content) if response.content else "No output",
-        "reference": str(dataset_item["reference"]),
-        "context": retrieved_context if retrieved_context else ["No context retrieved"]
+        "output": str(response.content) if response.content else "Error: No Output",
+        "reference": str(dataset_item["reference"]), # The "Model Answer" from your CSV
+        "context": final_context
     }
 
-# 4. RUN EVALUATION
+# 4. RUN THE BENCHMARK
 if __name__ == "__main__":
+    # Get the dataset
     dataset = get_benchmarking_dataset()
     
+    # Define the Metrics (The "Grading Rubric")
     metrics = [
-        Hallucination(), LevenshteinRatio(), Moderation(), 
-        AnswerRelevance(), ContextRecall(), ContextPrecision()
+        Hallucination(),       # Is it making things up?
+        AnswerRelevance(),     # Did it answer the specific question?
+        LevenshteinRatio(),    # How close is the text to your reference answer?
+        Moderation(),          # Is the content safe?
+        ContextRecall(),       # Did we find the right facts in the search?
+        ContextPrecision()     # Is the relevant info ranked high?
+
     ]
 
-    print("🚀 Starting Vyuha-AI Evaluation...")
+    print("\n🚀 Starting Vyuha-AI Evaluation Run...")
+    print("This may take a few minutes depending on the number of questions...\n")
+    
     evaluate(
-        experiment_name="Vyuha-Benchmark-Run",
+        experiment_name="Vyuha-GS1-Experiment-02", # Change this name for subsequent runs (02, 03...)
         dataset=dataset,
         task=evaluation_task,
-        scoring_metrics=metrics
-    )
+        scoring_metrics=metrics,
+        scoring_key_mapping={'expected_output': 'reference'},
+        verbose=True
+        )
+    
+    print("\n✅ Evaluation Complete! Check your Opik Dashboard.")

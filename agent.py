@@ -9,9 +9,10 @@ from agno.models.google.gemini import Gemini
 import streamlit as st
 from opik import track
 from dotenv import load_dotenv
-from agno.tools.fal import FalTools
+#from agno.tools.fal import FalTools
+from sketch_tool import OpenAIDalleTool
 
-from agno.tools.nano_banana import NanoBananaTools
+#from agno.tools.nano_banana import NanoBananaTools
 
 load_dotenv()
 
@@ -45,10 +46,12 @@ def get_gs1_agent():
     instructions = get_instruction('instructions_for_smegs1.md')
 
     # Initialize the Sketching Tool
-    sketch_tool = FalTools(
-        api_key=os.getenv("FAL_KEY"),
-        model="fal-ai/fast-lightning-sdxl", 
-    )
+    # sketch_tool = FalTools(
+    #     api_key=os.getenv("FAL_KEY"),
+    #     model="fal-ai/fast-lightning-sdxl", 
+    # )
+
+    sketch_tool = OpenAIDalleTool()
 
  
     return Agent(
@@ -64,16 +67,34 @@ def get_gs1_agent():
         add_knowledge_to_context=True
     )
 
+# Prompt Generation Agent
+
+@track(name='prompt_generator')
+def get_visual_agent():
+    return Agent(
+        name='Visual-Architect',
+        role='UPSC Diagram Speacialist',
+        instructions=["You receive a UPSC question and a draft answer.",
+            "Your ONLY task is to create a PROMPT for a pencil sketch by understanding the demand of the question and the drafted answer.",
+            "Focus on geographic accuracy: Use keywords like 'cross-section', 'schematic', 'contour map'.",
+            "Output ONLY the prompt string, nothing else."],
+        model=OpenAIChat(id="gpt-4o"),
+        markdown= True,
+        debug_mode=True
+    )
+
 # Creating Supervisor
 @track(name= "initialising_chief_examiner")
 def get_supervisor_team():
     supervisor= Team(
         name= 'Answer Reviewer',
-        members=[get_gs1_agent()],
+        members=[get_gs1_agent(), get_visual_agent()],
         id='answer_reviewer',
-        show_members_responses=False,
+        show_members_responses=True,
         instructions=get_supervisor_instructions(),
-        model=OpenAIChat(id='gpt-5.1')
+        model=OpenAIChat(id='gpt-4o'),
+        debug_mode=True
+        
     )
 
     return supervisor

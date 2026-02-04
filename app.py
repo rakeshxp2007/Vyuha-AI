@@ -1,4 +1,5 @@
 import streamlit as st
+import os
 import re
 import base64
 import time
@@ -15,12 +16,34 @@ from opentelemetry.sdk.trace.export import SimpleSpanProcessor
 
 @st.cache_resource
 def setup_opik_telemetry():
-    provider = trace_api.get_tracer_provider()
-    if not hasattr(provider, "add_span_processor"):
+    # 1. Check if we already set up (prevent double-init)
+    if not trace_api.get_tracer_provider():
+        
+        # 2. Point to Opik Cloud (Not Localhost!)
+        # Opik's default ingest endpoint is usually this:
+        endpoint = "https://www.opik.ai/api/v1/otlp/v1/traces" 
+        
+        headers = {
+            "opik-api-key": os.getenv("OPIK_API_KEY"),
+            "opik-workspace": os.getenv("OPIK_WORKSPACE")
+        }
+
+        # 3. Create the Exporter with the Cloud Endpoint
+        exporter = OTLPSpanExporter(endpoint=endpoint, headers=headers)
+        
         tracer_provider = TracerProvider()
-        tracer_provider.add_span_processor(SimpleSpanProcessor(OTLPSpanExporter()))
+        tracer_provider.add_span_processor(SimpleSpanProcessor(exporter))
         trace_api.set_tracer_provider(tracer_provider)
+        
+        # 4. Instrument Agno
         AgnoInstrumentor().instrument()
+        print("✅ Opik Deep Tracing Enabled (Cloud Mode)")
+
+# Run the setup
+try:
+    setup_opik_telemetry()
+except Exception as e:
+    print(f"⚠️ Telemetry skipped: {e}")
 
 setup_opik_telemetry()
 st.set_page_config(page_title="Vyuha-AI", 
@@ -159,7 +182,7 @@ if prompt := st.chat_input("Enter your UPSC GS-1 query..."):
         with trace_api.get_tracer(__name__).start_as_current_span("Vyuha-Query") as span:
             
             # 1. GET FINAL ANSWER (Non-Streaming)
-            with st.spinner("Supervisor is auditing the answer..."):
+            with st.spinner("Writing the answer..."):
                 try:
                     response = st.session_state.agent.run(prompt, stream=False)
                     final_text = response.content
