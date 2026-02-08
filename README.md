@@ -9,7 +9,9 @@
 [![LLM: OpenAI](https://img.shields.io/badge/LLM-OpenAI-000000)](https://openai.com/)
 [![Vector DB: LanceDB](https://img.shields.io/badge/VectorDB-LanceDB-4B8BFF)](https://lancedb.com/)
 [![Observability by Opik](https://img.shields.io/badge/Observability-Opik-FF6B6B)](https://www.comet.com/site/products/opik/)
-[![Models: HuggingFace](https://img.shields.io/badge/Models-HuggingFace-FFD21E)](https://huggingface.co/)
+[![Models: HuggingFace](https://img.shields.io/badge/Models-HuggingFace-FFD21E)](https://huggingface.co
+[![License: Custom](https://img.shields.io/badge/License-Custom-red)](#-license--hackathon-usage)
+
 
 ---
 
@@ -73,49 +75,44 @@ Vyuha-AI is built with **Opik** at its core to ensure reliability in a hallucina
 
 ---
 
-## 📂 Project Structure
+## 📂 Project Flow Diagram
 
-```bash
-Vyuha-AI/
-├── app.py               # Main Streamlit application entry point
-├── agents/              # Agent definitions (Drafter, Reviewer)
-├── core/                # RAG logic and Retriever configurations
-├── utils/               # Helper functions and prompt templates
-├── Dockerfile           # Docker configuration
-├── requirements.txt     # Python dependencies
-└── .env                 # Environment variables (API Keys)
+<img width="1024" height="1536" alt="Flow-diagram" src="https://github.com/user-attachments/assets/02daa380-18ee-484e-9c3f-7413a97ec845" />
 
 ---
 
-⚙️ Installation & Setup
+## ⚙️ Installation & Setup
 
-Prerequisites
+### Prerequisites
+- Python **3.10+**
+- **Google AI Studio (Gemini) API Key**
+- **Opik API Key**
 
-* Python 3.10+
-* Google AI Studio API Key
-* Opik API Key
+---
 
-1. Clone the Repository
-
-git clone [https://github.com/your-username/Vyuha-AI.git](https://github.com/your-username/Vyuha-AI.git)
+### 1️⃣ Clone the Repository
+```bash
+git clone https://github.com/your-username/Vyuha-AI.git
 cd Vyuha-AI
+```
 
-2. Configure Environment
-
-Create a .env file in the root directory:
+2️⃣ Configure Environment Variables
+Create a `.env` file in the project root:
+```
 GOOGLE_API_KEY="your_gemini_api_key"
 OPIK_API_KEY="your_opik_api_key"
 OPIK_WORKSPACE="your_opik_workspace"
+```
 
-3. Run Locally
-
+3️⃣ Install Dependencies
+```
 pip install -r requirements.txt
-streamlit run app.py
+```
 
-4. Run via Docker
-
-docker build -t vyuha-ai .
-docker run -p 8501:8501 --env-file .env vyuha-ai
+4️⃣ Run Locally
+```
+uv run streamlit run app.py
+```
 
 ---
 🗺️ Roadmap
@@ -129,12 +126,19 @@ docker run -p 8501:8501 --env-file .env vyuha-ai
 
 ---
 
-🤝 Contributing
-Contributions are welcome! Please open an issue to discuss proposed changes or submit a Pull Request.
+🤝 Contributors
+
+* Sanchita Deb
+* Pankaj Kumar
 
 ---
 
-📄 License
-This project is licensed under the MIT License - see the LICENSE file for details.
+## 📜 License & Hackathon Usage
+
+**License**: All Rights Reserved © Rakesh Kumar Sahoo
+
+**Hackathon Evaluation License**:  
+Judges and authorized organizers are granted a **temporary, non-exclusive, non-transferable license** to fork, run, and evaluate this repository **solely for hackathon evaluation purposes** until **March 10, 2026**.
+
 
 ---
