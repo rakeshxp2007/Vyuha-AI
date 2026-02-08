@@ -21,7 +21,7 @@
 ## 📸 10 Marks Q&A
 
 <img width="1024" height="773" alt="10_mark_answer" src="https://github.com/user-attachments/assets/322b133f-87af-4b55-ae56-74b6563155b9" />
----
+
 
 ## 📸 15 Marks Q&A
 <img width="1024" height="773" alt="15_mark_answer" src="https://github.com/user-attachments/assets/c68d7989-ec97-4020-ae32-4c9460dae525" />
