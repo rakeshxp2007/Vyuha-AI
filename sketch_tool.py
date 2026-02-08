@@ -11,92 +11,59 @@ class OpenAIDalleTool(Toolkit):
 
     def generate_image(self, prompt: str = "") -> str:
         """
-        Generates a topper-style academic sketch for UPSC GS-1 using OpenAI DALL-E 3.
-        Gracefully handles failures by returning a text placeholder.
+        Generates a UPSC diagram and returns it as a resizing HTML tag.
         """
         if not prompt:
-             return "\n\n*[System: No diagram description provided]*\n\n"
+             return ""
 
         try:
-            # STYLE INJECTION: Forces NCERT look and Legible English
-            style_prefix = (
-                "Style: NCERT India textbook academic diagram. "
-                "Type: Black and white pencil line art on white background. "
-                "Constraint: Use ONLY English text for labels. No gibberish. "
-                "Layout: Minimalist, clear, high-contrast. "
+            # STYLE LOCK: Forces "Schematic" look to reduce clutter/gibberish
+            TOPPER_STYLE = (
+                "UPSC Technical Diagram: Black and white line art on white paper. "
+                "Style: Minimalist, academic, 2D schematic. "
+                "No 3D shading. No artistic backgrounds. "
+                "Clearly labeled with legible English text. "
                 "Subject: "
             )
             
             response = self.client.images.generate(
                 model="dall-e-3",
-                prompt=style_prefix + prompt,
-                size="1024x1024",
+                prompt=TOPPER_STYLE + prompt,
+                size="1024x1792", # Landscape mode (Fits answer sheet better)
                 quality="standard",
                 n=1,
             )
 
-            # SAFETY CHECK
             if not response.data:
-                return "\n\n*[System: Image generation skipped]*\n\n"
+                return ""
 
             image_url = response.data[0].url
             
-            # RESIZING FIX: Use HTML instead of Markdown to force size
-            # width="400" creates a manageable box. 'align="center"' centers it.
+            # THE FIX: Return HTML with fixed width="400"
+            # This forces the image to be small (approx 1/3rd of page width)
             html_tag = (
                 f'<div align="center">'
-                f'<img src="{image_url}" alt="UPSC Sketch" width="400" style="border:1px solid #ccc; padding:5px; margin: 10px;">'
+                f'<figure>'
+                f'<img src="{image_url}" alt="UPSC Sketch" width="200" style="border:1px solid #ccc; margin: 10px;">'
+                f'<figcaption style="font-size: 12px; color: #555;"><i>Fig: Generated Diagram</i></figcaption>'
+                f'</figure>'
                 f'</div>'
             )
             return html_tag
 
         except Exception as e:
-            return f"\n\n*[Image Generation Error: {str(e)}]*\n\n"
+            print(f"❌ DALL-E Error: {str(e)}")
+            return ""
 
 
-
-
-
-
-# tried using free image generation tool but getting 502 bad gateway error always so trying with paid model
-
-# import random
-# import urllib.parse
-# from agno.tools import Toolkit
-
-# class PollinationsImageTool(Toolkit):
-#     def __init__(self):
-#         super().__init__(name="pollinations_image_tool")
-#         self.register(self.generate_image)
-
-#     def generate_image(self, prompt: str) -> str:
-#         """
-#         Generates a topper-style academic sketch for UPSC GS-1 using Pollinations AI.
-
-#         Args:
-#             prompt (str): The description of the image.
+# Inside PollinationsImageTool
+# def generate_image(self, prompt: str) -> str:
+#     # ... previous setup ...
     
-#         Returns:
-#             str: A formatted Markdown string containing the image URL.
-#         """
-#         # 1. Flatten the prompt (Remove all newlines/tabs)
-#         clean_text = " ".join(prompt.split())
-        
-#         # 2. Safety Strip (Remove extensions/params if agent added them)
-#         if ".png" in clean_text:
-#             clean_text = clean_text.split(".png")[0]
-#         if "?" in clean_text:
-#             clean_text = clean_text.split("?")[0]
-            
-#         # 3. URL Encode (safe='' encodes slashes '/' to '%2F' to prevent path errors)
-#         encoded_prompt = urllib.parse.quote(clean_text.strip(), safe='')
-        
-#         # 4. Generate Random Seed
-#         seed = random.randint(1, 10000)
-        
-#         # 5. Construct URL with MODEL Parameter
-#         # We add 'model=flux' which is currently more stable/faster than the default
-#         image_url = f"https://image.pollinations.ai/prompt/{encoded_prompt}.png?seed={seed}&model=flux&nologo=true"
-        
-#         # 6. Return Clean Markdown
-#         return f"\n\n![UPSC_SKETCH]({image_url})\n\n"
+#     # CRITICAL FIX: Truncate prompt to 200 chars to prevent 502 Errors
+#     safe_prompt = prompt[:200] 
+    
+#     encoded_prompt = urllib.parse.quote(safe_prompt)
+#     image_url = f"https://image.pollinations.ai/prompt/{encoded_prompt}?seed={seed}&model=flux&width=1200&height=800&nologo=true"
+    
+#     return f"![Sketch]({image_url})"

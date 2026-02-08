@@ -63,21 +63,12 @@ Before drafting, you **MUST** use `DuckDuckGoTools` to search for:
 
 *Example:* If asked about "Cyclones", search "Cyclones India 2024 IMD Report" -> Use "Cyclone Dana" or "Cyclone Remal" in your intro.
 
-## STEP 3: VISUALS & DIAGRAMS
-**CRITICAL RULE:** For Geography and Art/Culture questions, you **MUST** call the `openai_dalle_tool`.
-
-1.  **Prompt Strategy:** "[Topic] NCERT style diagram showing [Feature A] and [Feature B] with clear English or Hindi labels as per the language used in the question"
-2.  **Placement:** Embed the tool's output **Contextually**. 
-    - *Best Practice:* Place it immediately next to the paragraph that discusses the concept (e.g., if discussing "Temple Plan", place the image inside that section).
-    - *Constraint:* Do NOT simply dump it at the end.
-
-# STEP 4: TOPPER ARCHITECTURE (STRICT FORMATTING)
+# STEP 3: TOPPER ARCHITECTURE (STRICT FORMATTING)
 Follow this structure exactly. **Do NOT use generic headings like "Introduction" or "Body".**
 
 ### Phase 1: The Contextual Start (No Heading)
 - **Constraint:** Start immediately with the text.
 - **Content:** You **MUST** start with the **Current Affairs Hook** found in Step 2 or a high-value Definition/Quote.
-- **Diagram:** Insert the `![UPSC_SKETCH](...)` link here (if applicable).
 
 ### Phase 2: The Body (Contextual Headings)
 - **Formatting Rule:**
@@ -87,11 +78,13 @@ Follow this structure exactly. **Do NOT use generic headings like "Introduction"
 - **Content:**
   - **Data:** Cite the Government Report found in Step 2.
   - **Linkages:** Weave in GS-2 (Polity) or GS-3 (Economy/Environment) angles naturally within the points.
+  
+*Example:* As per IMF "sustanability report 2024" ... or As per NITI Ayog report on Child & Women walefare 2025..
 
-### Phase 3: The Way Forward (No Heading)
+### Phase 4: The Way Forward (No Heading)
 - **Format:** A separate paragraph at the end.
 - **Content:** Future-oriented. Link to **SDG Goals** or **Viksit Bharat @2047**.
 
-# STEP 5: WORD LIMITS
+# STEP 5: WORD LIMITS (MANDATORY)
 - **10-Marker:** < 170 Words.
 - **15-Marker:** < 280 Words.

@@ -4,7 +4,7 @@ import hashlib
 from tqdm import tqdm
 from dotenv import load_dotenv
 
-# --- 1. Native Opik Imports (Reliable) ---
+# --- Native Opik Imports  ---
 from openai import OpenAI
 import opik 
 from opik.integrations.openai import track_openai
@@ -13,7 +13,7 @@ from opik.integrations.openai import track_openai
 from agno.knowledge.knowledge import Knowledge
 from agno.knowledge.embedder.openai import OpenAIEmbedder
 from agno.vectordb.lancedb import LanceDb
-from agno.knowledge.chunking.fixed import FixedSizeChunking
+#from agno.knowledge.chunking.fixed import FixedSizeChunking
 from agno.knowledge.document import Document
 from dataset_preprocessor import download_dataset, create_document, book_list
 
@@ -24,7 +24,7 @@ load_dotenv()
 NCERT_PATH = './NCERT'
 VECTOR_PATH = './lance_db/GS1'
 BATCH_SIZE = 50
-SLEEP_TIME = 2.0
+SLEEP_TIME = 1.5
 
 os.environ["OPIK_PROJECT_NAME"] = "Vyuha-AI"
 opik.configure(use_local=False)
@@ -33,14 +33,16 @@ tracked_client = track_openai(client)
 
 
 embedder = OpenAIEmbedder(
-    id='text-embedding-3-small',
-    openai_client=tracked_client
+    id='text-embedding-3-large',
+    openai_client=tracked_client,
+    dimensions=3072
 )
 
-chunking_strategy = FixedSizeChunking(
-    chunk_size=2000,
-    overlap=0
-    )
+# Experimenting: from fixed size to metadata based chunking
+# chunking_strategy = FixedSizeChunking(
+#     chunk_size=2000,
+#     overlap=0
+#     )
 
 vector_db = LanceDb(
     uri= VECTOR_PATH,
@@ -48,7 +50,7 @@ vector_db = LanceDb(
     table_name='GS1'
 )
 
-# creating the knowledgebase 
+# creating the knowledgebase wrapper to be imported by agent.py later
 knowledge_base = Knowledge(
     name= 'GS1_Knowledge_Base',
     description='class 11 & 12 NCERT history and Geography books embeddings',
@@ -61,42 +63,7 @@ def get_content_hash(text: str) -> str:
     return hashlib.md5(text.encode("utf-8")).hexdigest()
 
 
-# Creating a helper function to run batches 
-
-@opik.track(name="Process Batch")
-def process_single_batch(i, batch_texts, vector_db, chunking_strategy):
-    """Handles processing and uploading of a single batch with Opik tracking."""
-    raw_documents = [Document(content=text) for text in batch_texts]
-    final_chunked_docs = []
-
-    for doc in raw_documents:
-        # Standard Agno chunking
-        chunks = chunking_strategy.chunk(doc)
-        for chunk in chunks:
-            chunk_hash = get_content_hash(chunk.content)
-            chunk.id = chunk_hash # Assign hash as ID for upsert logic
-            final_chunked_docs.append(chunk)
-
-    if final_chunked_docs:
-        # Create a unique hash for the entire batch to satisfy LanceDB requirement
-        batch_content_str = "".join([d.content for d in final_chunked_docs])
-        batch_hash = get_content_hash(batch_content_str)
-        
-        # Explicitly pass content_hash to LanceDB upsert
-        vector_db.upsert(
-            documents=final_chunked_docs,
-            content_hash=batch_hash
-        )
-
-        # Log specific metadata for this batch span
-        opik.opik_context.update_current_span(
-            metadata={
-                "batch_index": i,
-                "chunks_in_batch": len(final_chunked_docs)
-            }
-        )
-
-# --- 6. Main Logic ---
+# --- Main Ingestion Logic ---
 @opik.track(name='Ingest NCERT')
 def main():
     # 1. Verify Dataset
@@ -104,29 +71,58 @@ def main():
         print("NCERT directory empty. Starting download...")
         download_dataset(base_path=NCERT_PATH, book_list=book_list)
 
-    # 2. Load documents into memory
+    # 2. Load documents into memory (Returns Dictionary List)
     print("Reading and formatting documents...")
-    all_text_chunks = create_document(base_path=NCERT_PATH)
-    total_docs = len(all_text_chunks)
-    print(f"\nLoaded {total_docs} rows into memory.")
+    all_doc_data = create_document(base_path=NCERT_PATH) 
+    total_docs = len(all_doc_data)
+    print(f"Loaded {total_docs} rows to process.")
 
     if total_docs == 0:
         print("No documents found to process. Exiting.")
         return
 
-    # 3. Initialize Vector DB table
+    # 3. Initialize/Reset Vector DB table
+    # This creates the table with the schema from the embedder
     vector_db.create()
 
     # 4. Batch Processing Loop
     for i in tqdm(range(0, total_docs, BATCH_SIZE), desc="Processing Batches"):
-        batch_texts = all_text_chunks[i : i + BATCH_SIZE]
+        batch_data = all_doc_data[i : i + BATCH_SIZE]
         
-        try:
-            process_single_batch(i, batch_texts, vector_db, chunking_strategy)
-        except Exception as e:
-            print(f"\nError in batch starting at {i}: {e}")
-            time.sleep(5) 
+        batch_documents = []
+        batch_content_str = "" # Accumulator for the batch hash
 
+        for item in batch_data:
+            # Create Document using the pre-processed dictionary
+            doc = Document(
+                content=item['content'],
+                meta_data=item['metadata'] # Passing the dictionary directly
+            )
+            
+            # Generate unique ID based on content to prevent duplicates
+            doc.id = get_content_hash(doc.content)
+            
+            batch_documents.append(doc)
+            
+            # Accumulate content for batch integrity check
+            batch_content_str += doc.content
+
+        # Calculate Batch Hash (Required by LanceDB upsert)
+        batch_hash = get_content_hash(batch_content_str)
+
+        try:
+            # DIRECT UPSERT (No Chunking)
+            vector_db.upsert(
+                documents=batch_documents,
+                content_hash=batch_hash 
+            )
+            
+        except Exception as e:
+            print(f"⚠️ Error in batch {i}: {e}")
+            time.sleep(10) # Backoff on error
+            continue
+
+        # Politeness pause to avoid OpenAI Rate Limits
         time.sleep(SLEEP_TIME)
 
     print("\n\nSUCCESS! Knowledge Base populated safely.")
@@ -137,6 +133,3 @@ def main():
     
 if __name__ == "__main__":
     main()
-
-
-

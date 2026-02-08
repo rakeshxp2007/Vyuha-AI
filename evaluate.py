@@ -109,7 +109,7 @@ if __name__ == "__main__":
     print("This may take a few minutes depending on the number of questions...\n")
     
     evaluate(
-        experiment_name="Vyuha-GS1-Experiment-02", # Change this name for subsequent runs (02, 03...)
+        experiment_name="Vyuha-GS1-Experiment-06", # Change this name for subsequent runs (02, 03...)
         dataset=dataset,
         task=evaluation_task,
         scoring_metrics=metrics,

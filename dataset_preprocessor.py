@@ -33,7 +33,7 @@ def download_dataset(base_path, book_list):
 # Create document
 
 def create_document(base_path):
-    documents=[]
+    processed_docs = [] 
 
     if not os.path.exists(base_path):
         print(f"Error: Path not found {base_path}")
@@ -45,37 +45,68 @@ def create_document(base_path):
             file_path = os.path.join(base_path, filename_str)
             try:
                 ds = pd.read_csv(file_path).fillna("")
-                # Convert to list of dictionaries
                 records = ds.to_dict('records')
-                subject = 'History' if 'history' in filename_str.lower() else 'geography'
+                
+                # Extract clean subject/book name
+                # e.g., "NCERT_History_11th.csv" -> "History_11th"
+                clean_source = filename_str.replace('.csv', '')
+                subject = 'History' if 'history' in filename_str.lower() else 'Geography'
 
                 for row in records:
-                    topic = str(row.get('Topic', 'N/A'))
+                    topic = str(row.get('Topic', 'General'))
                     question = str(row.get('Question', ''))
                     answer = str(row.get('Answer', ''))
                     explanation = str(row.get('Explanation', ''))
 
-                    # Only create document if there is actual content
-                    if question.strip() or explanation.strip():
-                        doc = (
-                            f"SOURCE: {filename_str}\n"
-                            f"SUBJECT: {subject}\n"
-                            f"TOPIC: {topic}\n"
-                            f"QUESTION: {question}\n"
-                            f"ANSWER: {answer}\n"
-                            f"EXPLANATION: {explanation}"
-                        )
+                    # Skip empty rows
+                    if not question.strip() and not explanation.strip():
+                        continue
 
-                    documents.append(doc)
+                    # 1. THE RICH TEXT (For Embedding & LLM Reading)
+                    # We keep the "Context Injection" here because it helps vector search
+                    text_content = (
+                        f"SUBJECT: {subject} | TOPIC: {topic}\n"
+                        f"Q: {question}\n"
+                        f"A: {answer}\n"
+                        f"EXP: {explanation}"
+                    )
+
+                    # 2. THE STRUCTURED METADATA (For Opik & Database Filtering)
+                    meta = {
+                        "source": clean_source,
+                        "subject": subject,
+                        "topic": topic,
+                        "type": "Q&A"
+                    }
+
+                    # Return both as a dictionary
+                    processed_docs.append({
+                        "content": text_content,
+                        "metadata": meta
+                    })
+                    
             except Exception as e:
-                print(f"Skipping folder {filename_str} : {e}")
+                print(f"Skipping file {filename_str} : {e}")
                 
-    return documents
+    return processed_docs
 
 if __name__ == "__main__":
-    # Base directory for your POC
+    # Base directory for POC
     base_path = "./NCERT"
     download_dataset(base_path=base_path, book_list=book_list)
+    
+    # Run the function that builds the dictionaries
     extracted_docs = create_document(base_path=base_path)
-    print(f"Generate {len(extracted_docs)} documents")
+    print(f"\nGenerated {len(extracted_docs)} documents.")
+    
+    # --- VERIFICATION STEP ---
+    # Print the very first document to see how it is structured
+    if extracted_docs:
+        print("\n--- SAMPLE DOCUMENT (Row 1) ---")
+        print("1. THE CONTENT (What the LLM reads):")
+        print(extracted_docs[0]['content'])
+        
+        print("\n2. THE METADATA (What LanceDB uses for filtering/tracking):")
+        print(extracted_docs[0]['metadata'])
+        print("-------------------------------\n")
 

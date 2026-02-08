@@ -20,7 +20,6 @@ def setup_opik_telemetry():
     if not trace_api.get_tracer_provider():
         
         # 2. Point to Opik Cloud (Not Localhost!)
-        # Opik's default ingest endpoint is usually this:
         endpoint = "https://www.opik.ai/api/v1/otlp/v1/traces" 
         
         headers = {
@@ -28,7 +27,7 @@ def setup_opik_telemetry():
             "opik-workspace": os.getenv("OPIK_WORKSPACE")
         }
 
-        # 3. Create the Exporter with the Cloud Endpoint
+        # 3. Create the Exporter
         exporter = OTLPSpanExporter(endpoint=endpoint, headers=headers)
         
         tracer_provider = TracerProvider()
@@ -39,13 +38,14 @@ def setup_opik_telemetry():
         AgnoInstrumentor().instrument()
         print("✅ Opik Deep Tracing Enabled (Cloud Mode)")
 
-# Run the setup
+# Run the setup ONCE
 try:
     setup_opik_telemetry()
 except Exception as e:
     print(f"⚠️ Telemetry skipped: {e}")
 
-setup_opik_telemetry()
+# FIX 1: Removed the duplicate 'setup_opik_telemetry()' call that was here
+
 st.set_page_config(page_title="Vyuha-AI", 
                    layout="wide",
                    initial_sidebar_state="expanded")
@@ -53,65 +53,38 @@ load_dotenv()
 
 # --- CONSTANTS & DESIGN CONFIG ---
 LOGO_PATH = "./assets/Logo-Vyuha.png"
+SIDEBAR_LOGO_WIDTH = 180 
+THEME_COLOR = "#1C2E69"
 
-# 🛠️ MANUAL DESIGN OVERRIDES
-SIDEBAR_LOGO_WIDTH = 180   # Change this to resize the centered sidebar logo
-THEME_COLOR = "#1C2E69"    # Unified Navy Blue (Your matched color)
-
-
-# --- CUSTOM CSS: THE "HARD-CENTER" ENGINE ---
+# --- CUSTOM CSS ---
 def apply_custom_style():
     st.markdown(f"""
         <style>
-            /* 1. Global Backgrounds (Body, Sidebar, Header, and Bottom Bar) */
-            .stApp, 
-            [data-testid="stSidebar"], 
-            [data-testid="stHeader"], 
-            [data-testid="stBottomBlockContainer"] {{
+            .stApp, [data-testid="stSidebar"], [data-testid="stHeader"], [data-testid="stBottomBlockContainer"] {{
                 background-color: {THEME_COLOR} !important;
             }}
-            
-            /* 2. Unified Header (Fixes the black/white top bar) */
             header[data-testid="stHeader"] {{
                 background-color: {THEME_COLOR} !important;
                 border-bottom: 1px solid rgba(255,255,255,0.05);
             }}
-
-            /* Hide 'Deploy', 'Rerun', and 'GitHub' icons specifically */
-            [data-testid="stHeaderActionElements"] {{
-                visibility: hidden;
-            }}
-
-            /* 3. Restore the Deep Sidebar Shadow */
+            [data-testid="stHeaderActionElements"] {{ visibility: hidden; }}
             section[data-testid="stSidebar"] {{
                 border-right: 1px solid rgba(255,255,255,0.1);
                 box-shadow: 15px 0 25px rgba(0,0,0,0.5) !important;
                 z-index: 100;
             }}
-
-            /* 4. Force Centering for Sidebar Content */
             [data-testid="stSidebarContent"] {{
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-                text-align: center;
+                display: flex; flex-direction: column; align-items: center; text-align: center;
             }}
-
-            /* 5. Chat Input and Typography */
-            h1, h2, h3, p, span, label, .stMarkdown {{ 
-                color: white !important; 
-            }}
-            
+            h1, h2, h3, p, span, label, .stMarkdown {{ color: white !important; }}
             [data-testid="stChatInput"] {{
                 background-color: {THEME_COLOR} !important;
                 border: 1px solid rgba(255,255,255,0.2) !important;
             }}
-
             .stChatMessage {{ 
                 background-color: rgba(255, 255, 255, 0.05) !important;
                 border: 1px solid rgba(255, 255, 255, 0.1);
             }}
-
             .word-count {{ color: #00d4ff !important; font-weight: bold; }}
         </style>
     """, unsafe_allow_html=True)
@@ -120,16 +93,12 @@ apply_custom_style()
 
 # --- SIDEBAR ---
 with st.sidebar:
-    # Centered Logo using Base64 for absolute control
     try:
         with open(LOGO_PATH, "rb") as f:
             encoded_logo = base64.b64encode(f.read()).decode()
         st.markdown(
-            f"""
-            <div style="display: flex; justify-content: center; margin-top: 20px; margin-bottom: 10px;">
-                <img src="data:image/png;base64,{encoded_logo}" width="{SIDEBAR_LOGO_WIDTH}">
-            </div>
-            """, 
+            f"""<div style="display: flex; justify-content: center; margin-top: 20px; margin-bottom: 10px;">
+                <img src="data:image/png;base64,{encoded_logo}" width="{SIDEBAR_LOGO_WIDTH}"></div>""", 
             unsafe_allow_html=True
         )
     except:
@@ -138,7 +107,6 @@ with st.sidebar:
     st.markdown("<h3 style='text-align: center; margin-bottom: 0;'>Vyuha-AI</h3>", unsafe_allow_html=True)
     st.markdown("---")
     
-    # Centered Button using column-trick
     c1, c2, c3 = st.columns([1, 6, 1])
     with c2:
         if st.button("Clear Conversation", use_container_width=True):
@@ -148,24 +116,24 @@ with st.sidebar:
     st.markdown("---")
     st.caption("System Status: Agent Active ✅")
 
-# --- STATE MANAGEMENT ---
-if "agent" in st.session_state:
-    del st.session_state.agent 
+# --- STATE MANAGEMENT (CRITICAL FIX) ---
 
-# 2. Load the Supervisor Team
+# FIX 2: Removed the logic that deleted the agent. 
+# We WANT the agent to persist so it remembers the conversation and loads faster.
 if "agent" not in st.session_state: 
-    st.session_state.agent = get_supervisor_team()
-    print("✅ Supervisor Team Loaded Successfully") 
+    with st.spinner("Initializing Supervisor Team..."):
+        st.session_state.agent = get_supervisor_team()
+        print("✅ Supervisor Team Loaded Successfully") 
 
-# 3. Initialize Chat History (Keep this!)
 if "messages" not in st.session_state: 
     st.session_state.messages = []
 
 # Message Display
 for msg in st.session_state.messages:
     with st.chat_message(msg["role"]):
-        st.markdown(msg["content"])
-        if "word_count" in msg: st.markdown(f'<p class="word-count">Words: {msg["word_count"]}</p>', unsafe_allow_html=True)
+        st.markdown(msg["content"], unsafe_allow_html=True)
+        if "word_count" in msg: 
+            st.markdown(f'<p class="word-count">Words: {msg["word_count"]}</p>', unsafe_allow_html=True)
 
 # Input Logic
 if prompt := st.chat_input("Enter your UPSC GS-1 query..."):
@@ -181,7 +149,8 @@ if prompt := st.chat_input("Enter your UPSC GS-1 query..."):
         
         with trace_api.get_tracer(__name__).start_as_current_span("Vyuha-Query") as span:
             
-            # 1. GET FINAL ANSWER (Non-Streaming)
+            # 1. GET FINAL ANSWER
+            # While this runs, Streamlit will now correctly LOCK the input box
             with st.spinner("Writing the answer..."):
                 try:
                     response = st.session_state.agent.run(prompt, stream=False)
@@ -189,25 +158,20 @@ if prompt := st.chat_input("Enter your UPSC GS-1 query..."):
                 except Exception as e:
                     final_text = f"Error: {str(e)}"
 
-            # 2. TYPEWRITER EFFECT (Text Only)
+            # 2. TYPEWRITER EFFECT
             for word in final_text.split(" "):
                 full_res += word + " "
-                placeholder.markdown(full_res + "▌")
+                # FIX 3: Enable HTML here so images render during typing if needed
+                placeholder.markdown(full_res + "▌", unsafe_allow_html=True)
                 time.sleep(0.02) 
             
-            # Remove cursor at the end
-            placeholder.markdown(full_res)
+            # Remove cursor and Final Render
+            placeholder.markdown(full_res, unsafe_allow_html=True)
 
-            # 3. RENDER IMAGE (Runs ONCE after typing is done)
-            # This prevents the app from trying to reload the image 200 times
-            image_match = re.search(r'!\[.*?\]\((.*?)\)', full_res)
-            if image_match:
-                image_url = image_match.group(1)
-                st.image(image_url, caption="Generated Diagram", use_container_width=True)
-
-            # 4. WORD COUNT LOGIC
-            clean_text = full_res.replace(prompt, "").strip()
-            clean_text = re.sub(r'[*#|_`]', '', clean_text)
+            # 3. WORD COUNT LOGIC
+            clean_text = re.sub(r'[*#|_`]', '', full_res).strip()
+            # Remove image links from word count to be accurate
+            clean_text = re.sub(r'!\[.*?\]\(.*?\)', '', clean_text)
             w_count = len(clean_text.split())
 
             if w_count > 260:
