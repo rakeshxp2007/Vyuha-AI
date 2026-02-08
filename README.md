@@ -1,19 +1,30 @@
-# 🏛️ Vyuha-AI: Strategic UPSC Mains Assistant
+# 🏛️ Vyuha-AI: UPSC Mains Strategy Partner
+
+<img width="1024" height="344" alt="Banner-Vyuha" src="https://github.com/user-attachments/assets/697f1408-0d76-4a71-9280-6f53d0c697f0" />
+
+---
 
 [![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://share.streamlit.io/)
 [![Powered by Gemini](https://img.shields.io/badge/Powered%20by-Gemini-4E8BF5?logo=google-gemini&logoColor=white)](https://deepmind.google/technologies/gemini/)
+[![LLM: OpenAI](https://img.shields.io/badge/LLM-OpenAI-000000)](https://openai.com/)
+[![Vector DB: LanceDB](https://img.shields.io/badge/VectorDB-LanceDB-4B8BFF)](https://lancedb.com/)
 [![Observability by Opik](https://img.shields.io/badge/Observability-Opik-FF6B6B)](https://www.comet.com/site/products/opik/)
-[![Dockerized](https://img.shields.io/badge/Docker-Enabled-2496ED?logo=docker&logoColor=white)](https://www.docker.com/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Models: HuggingFace](https://img.shields.io/badge/Models-HuggingFace-FFD21E)](https://huggingface.co/)
+
+---
 
 > **"Vyuha" (Sanskrit: व्यूह)** refers to a strategic formation or arrangement.
 > **Vyuha-AI** is a Multi-Agent RAG system designed to help UPSC Mains aspirants strategically structure, draft, and evaluate their answers against "Topper-level" benchmarks.
 
 ---
 
-## 📸 Demo
+## 📸 10 Marks Q&A
 
-*(Place a screenshot of your Streamlit UI or a GIF of the answer generation process here)*
+<img width="1024" height="773" alt="10_mark_answer" src="https://github.com/user-attachments/assets/322b133f-87af-4b55-ae56-74b6563155b9" />
+---
+
+## 📸 15 Marks Q&A
+<img width="1024" height="773" alt="15_mark_answer" src="https://github.com/user-attachments/assets/c68d7989-ec97-4020-ae32-4c9460dae525" />
 
 ---
 
