@@ -26,7 +26,7 @@
 ## 📸 15 Marks Q&A
 <img width="1024" height="773" alt="15_mark_answer" src="https://github.com/user-attachments/assets/c68d7989-ec97-4020-ae32-4c9460dae525" />
 
-## 📸 Proof of string grounding to GS1 (History, Geography & Society)
+## 📸 Proof of strong grounding to GS1 (History, Geography & Society)
 
 <img width="1024" height="522" alt="Screenshot 2026-02-09 at 11 04 26" src="https://github.com/user-attachments/assets/bd1f3d15-713c-46c2-aa1e-d08c4ba836b3" />
 
