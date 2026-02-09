@@ -3,7 +3,6 @@
 <img width="1024" height="344" alt="Banner-Vyuha" src="https://github.com/user-attachments/assets/697f1408-0d76-4a71-9280-6f53d0c697f0" />
 
 ---
-
 [![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://share.streamlit.io/)
 [![Powered by Gemini](https://img.shields.io/badge/Powered%20by-Gemini-4E8BF5?logo=google-gemini&logoColor=white)](https://deepmind.google/technologies/gemini/)
 [![LLM: OpenAI](https://img.shields.io/badge/LLM-OpenAI-000000)](https://openai.com/)
@@ -11,7 +10,6 @@
 [![Observability by Opik](https://img.shields.io/badge/Observability-Opik-FF6B6B)](https://www.comet.com/site/products/opik/)
 [![Models: HuggingFace](https://img.shields.io/badge/Models-HuggingFace-FFD21E)](https://huggingface.co/)
 [![License: Custom](https://img.shields.io/badge/License-Custom-red)](#-license--hackathon-usage)
-
 
 ---
 
@@ -153,8 +151,10 @@ uv run streamlit run app.py
 
 🤝 Contributors
 
-* Sanchita Deb
-* Pankaj Kumar
+* [![LinkedIn](https://img.shields.io/badge/LinkedIn-Sanchita%20Deb-0A66C2?logo=linkedin&logoColor=white)](https://www.linkedin.com/in/sanchitadeb21/)
+* [![LinkedIn](https://img.shields.io/badge/LinkedIn-Pankaj%20Kumar-blue?logo=linkedin)](https://www.linkedin.com/in/pankaj-kumar-2a1b19278/)
+* [![LinkedIn](https://img.shields.io/badge/LinkedIn-Rakesh%20Kumar%20Sahoo-0A66C2?logo=linkedin&logoColor=white)](https://www.linkedin.com/in/rakeshkumarsahoo23/)
+
 
 ---
 
