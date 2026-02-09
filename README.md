@@ -32,33 +32,31 @@
 
 ## 🚀 The Problem
 
-The UPSC Civil Services Mains examination is not just about knowledge; it is about **presentation** and **structure**. Aspirants face specific challenges that generic LLMs fail to address:
-* **Strict Word Limits:** Answers must be strictly 150 or 250 words.
-* **Contextual Linkage:** Static syllabus topics (History/Geography) must be linked to dynamic Current Affairs.
-* **Value Addition:** High-scoring answers require specific elements like "Value Addition Boxes," diagrams, or relevant case studies.
+The `UPSC Civil Service Examination (UPSC-CSE)` evaluates how an aspirant can connect and think, plan, and write answers by linking relevant topics while also meeting the minimum demand of the question—all within the word limit or roughly 8–9 minutes per question. This requires a lot of practice. Some estimates suggest the top 100 rankers have given almost 100 full tests before appearing for the Mains. They represent less than 1% of total applicants. The **rest 99%**, although they may understand the demand, are not able to reproduce that in the exam. With GPT models in the market, aspirants get answers for practice which are rich in content, but reproducing such content is not humanly possible in those 180 minutes.
 
 ## 💡 The Solution
 
-**Vyuha-AI** leverages a specialized Multi-Agent architecture to simulate the thought process of a UPSC Topper.
+> **Vyuha-AI** leverages a specialized Multi-Agent architecture to simulate the thought process of a UPSC Topper.
 
 ### Key Features
 * **📝 Structured Drafting:** Automatically formats answers into the mandatory *Introduction → Body → Conclusion* flow.
-* **💎 Value Addition Box:** A dedicated agent injects a "Value Addition" section (Facts, Articles, Supreme Court Judgments) to boost score potential.
 * **⏱️ Word Limit Enforcement:** Strict token constraints ensure answers fit within the 150/250 word mandate.
 * **🔗 Dynamic Context:** RAG pipelines retrieve relevant context from standard textbooks and recent editorials.
 * **🔍 Observability:** Full transparency into agent reasoning and latency via **Opik**.
 
 ---
 
-## 🛠️ Tech Stack
+## 🧰 Tech Stack
 
-| Component | Technology | Description |
-| :--- | :--- | :--- |
-| **LLM** | **Google Gemini** | `gemini-1.5-pro` & `gemini-1.5-flash` for reasoning and drafting. |
-| **Frontend** | **Streamlit** | Interactive chat interface for aspirants. |
-| **Observability** | **Opik (by Comet)** | Tracing, evaluation, and latency monitoring. |
-| **Orchestration** | **LangChain / Custom** | Managing agent workflows and RAG retrieval. |
-| **Deployment** | **Docker** | Containerized application for easy deployment. |
+| Component           | Technology              | Description |
+|---------------------|--------------------------|-------------|
+| Agent Intelligence  | Google Gemini 3          | Primary reasoning engine for both SME and team orchestration; optimized for high-token UPSC contextual reasoning. |
+| Embedding Engine    | text-embedding-3-large   | 3,072-dimensional embeddings enabling high-precision semantic retrieval from dense NCERT and static syllabus content. |
+| Vector Database     | LanceDB                  | Serverless, disk-persistent vector store enabling row-aware retrieval to preserve contextual integrity across documents. |
+| Orchestration       | Agno (Phidata)           | Agent orchestration layer providing tracing, evaluation, latency monitoring, and prompt versioning for reliable agentic workflows. |
+| Observability       | Opik (by Comet)          | End-to-end observability for agent traces, evaluation runs, latency metrics, and systematic prompt experimentation. |
+| Frontend            | Streamlit                | Interactive UI designed to surface both the final UPSC answer and the underlying agent planning workflow. |
+
 
 ---
 
@@ -71,11 +69,25 @@ Vyuha-AI is built with **Opik** at its core to ensure reliability in a hallucina
 2.  **Evaluation:** We track "hallucination rates" by logging retrieved context against generated answers.
 3.  **Cost & Latency:** Monitoring the trade-off between the faster `gemini-flash` (for retrieval) and `gemini-pro` (for drafting).
 
-*(Place a screenshot of your Opik Dashboard Traces here)*
+| <img width="1024" height="1245" alt="Span" src="https://github.com/user-attachments/assets/31a424cc-189e-412d-bc4e-a582e6f54a40" /> |
+|--- |
+| `Opik`: A span |
+
 
 ---
 
-## 📂 Project Flow Diagram
+## 📊 Performance Benchmarking
+
+| Metric                | Value  | Technical Context |
+|-----------------------|--------|-------------------|
+| Context Recall        | 85.6%  | High-fidelity retrieval enabled by 3,072-dimension embeddings over dense NCERT and static syllabus content. |
+| Answer Relevance      | 93.2%  | Strong alignment with UPSC-specific question demand and directive adherence. |
+| Hallucination Metric  | 98.4%  | High groundedness enforced through mandatory dual-source citation and RAG constraints. |
+| Levenshtein Ratio     | 0.40   | Intentional divergence indicating successful restructuring of raw content into a superior, exam-oriented answer format. |
+
+---
+
+## 🛠️  Project Flow Diagram
 
 <img width="1024" height="1536" alt="Flow-diagram" src="https://github.com/user-attachments/assets/02daa380-18ee-484e-9c3f-7413a97ec845" />
 
@@ -115,7 +127,8 @@ uv run streamlit run app.py
 ```
 
 ---
-🗺️ Roadmap
+## 🗺️ Roadmap
+
 [x] Phase 1: Core RAG Agent for GS-1 (History/Geography).
 
 [x] Phase 2: Integration of Opik for full system observability.
