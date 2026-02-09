@@ -60,22 +60,6 @@ The `UPSC Civil Service Examination (UPSC-CSE)` evaluates how an aspirant can co
 
 ---
 
-## 📊 Opik Integration (Hackathon Track)
-
-Vyuha-AI is built with **Opik** at its core to ensure reliability in a hallucination-prone domain like education.
-
-### How we use Opik:
-1.  **Traceability:** We trace the full lifecycle of a user query—from the RAG retriever fetching documents to the Drafting Agent generating the final response.
-2.  **Evaluation:** We track "hallucination rates" by logging retrieved context against generated answers.
-3.  **Cost & Latency:** Monitoring the trade-off between the faster `gemini-flash` (for retrieval) and `gemini-pro` (for drafting).
-
-| <img width="1024" height="1245" alt="Span" src="https://github.com/user-attachments/assets/31a424cc-189e-412d-bc4e-a582e6f54a40" /> |
-|--- |
-| `Opik`: A span |
-
-
----
-
 ## 📊 Performance Benchmarking
 
 | Metric                | Value  | Technical Context |
@@ -85,11 +69,32 @@ Vyuha-AI is built with **Opik** at its core to ensure reliability in a hallucina
 | Hallucination Metric  | 98.4%  | High groundedness enforced through mandatory dual-source citation and RAG constraints. |
 | Levenshtein Ratio     | 0.40   | Intentional divergence indicating successful restructuring of raw content into a superior, exam-oriented answer format. |
 
+
+|<img width="292" height="176" alt="eval" src="https://github.com/user-attachments/assets/9c8981a4-50de-42d1-915f-b6c3ddefc3ae" /> |<img width="687" height="345" alt="eval_Opik" src="https://github.com/user-attachments/assets/eaf82e35-6d56-40c9-a3ac-4cc2c0486652" /> |
+|--- |--- |
+| `Terminal`: Evaluation Matrix | `Opik`: Evaluation Matrix |
+
 ---
 
 ## 🛠️  Project Flow Diagram
 
 <img width="1024" height="1536" alt="Flow-diagram" src="https://github.com/user-attachments/assets/02daa380-18ee-484e-9c3f-7413a97ec845" />
+
+---
+
+## 🔍 Opik Integration Details
+
+
+| Opik Feature            | Implementation File(s)     | Specific Usage & Logic | Evidence / Screenshot |
+|-------------------------|----------------------------|------------------------|-----------------------|
+| LLM Traces & Spans      | `knowledge_gs1.py`             | Embedding tracking: Traced `gpt-large-embedder` calls to verify latency and token usage during vectorization.| <img width="256" height="256" alt="Screenshot 2026-02-09 at 09 29 51" src="https://github.com/user-attachments/assets/2452bd3d-4883-4fef-9990-ac538b3f7cfd" /> |
+| Agent & Prompt Tracing  | `agent.py`                     | Initialization tracking: Verified correct loading of system prompts for **gs1sme (Agent)** and **Chief Examiner (Supervisor)** personas.| <img width="256" height="256" alt="Screenshot 2026-02-09 at 09 29 51" src="https://github.com/user-attachments/assets/a298f640-55dc-4723-8f5d-78360d5a72de" /> |
+| Datasets                | `evaluation.py`                | Golden set evaluation: Used an SME-curated *LLM-as-judge* dataset for static benchmarking and regression testing. | <img width="256" height="256" alt="Span" src="https://github.com/user-attachments/assets/61cf9cc3-1d7c-485f-916a-fd0fa768122d" /> |
+| Automated Metrics       | `evaluation.py`                | RAG & safety evaluation: Computed Hallucination, Answer Relevance, Context Recall, Context Precision, and Moderation scores.| ⬆️ |
+| Deterministic Metrics   | `evaluation.py`                | Exactness checks: Applied **Levenshtein Ratio** to quantify divergence from SME reference answers. | ⬆️ |
+| Guardrails / Rules      | `agent.py`, `evaluation.py`    | Syllabus validation: Rejected non-GS1 and out-of-distribution queries during controlled testing.| ⬆️ |
+| Prompt Optimization     | `optimization.py`              | Iterative refinement: Leveraged Opik’s **PromptOptimizer SDK** to improve `gs1sme` instructions against SME benchmarks.| <img width="256" height="256" alt="Screenshot 2026-02-09 at 09 44 29" src="https://github.com/user-attachments/assets/38e95bf2-2a48-43da-a740-5c9f31be9fda" /> |
+
 
 ---
 
@@ -110,32 +115,39 @@ cd Vyuha-AI
 
 2️⃣ Configure Environment Variables
 Create a `.env` file in the project root:
-```
+```bash
 GOOGLE_API_KEY="your_gemini_api_key"
 OPIK_API_KEY="your_opik_api_key"
 OPIK_WORKSPACE="your_opik_workspace"
 ```
 
 3️⃣ Install Dependencies
-```
+```bash
 pip install -r requirements.txt
+uv pip install -r requirements.txt
 ```
 
 4️⃣ Run Locally
-```
+```bash
+streamlit run app.py
 uv run streamlit run app.py
 ```
 
+5️⃣ Use direct URL
+
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-Vyuha--AI-brightgreen)](https://vyuha-ai.streamlit.app/)
+
 ---
-## 🗺️ Roadmap
 
-[x] Phase 1: Core RAG Agent for GS-1 (History/Geography).
+## 🗺️ Future Enhancements Planned
 
-[x] Phase 2: Integration of Opik for full system observability.
+[ ] Phase 1: Image generation for automatic map/diagram creation.
 
-[ ] Phase 3: Specialized agents for GS-2 (Polity) and GS-3 (Economy).
+[ ] Phase 2: Specialized agents for GS-2 (Polity) and GS-3 (Economy) & Essay
 
-[ ] Phase 4: Image generation for automatic map/diagram creation.
+[ ] Phase 3: Create vector databse of Topper's hand written answers (OCR or ADR)
+
+[ ] Phase 4: Answer Evaluator 
 
 ---
 
